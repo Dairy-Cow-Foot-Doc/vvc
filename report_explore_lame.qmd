@@ -690,6 +690,53 @@ iwalk(non_inf_table, ~ {
 ```
 ::::
 
+# ## Recheck compliance for non-infectious lesions
+
+```{r}
+#| label: recehck-compliance
+
+# process data
+source("functions/fxn_recheck.R")
+source("functions/fxn_km_graph.R")
+
+lame_cull_noninf <- lame_cull |> 
+  mutate(year = year(date_trim),
+         rechecked = if_else(is.na(days_to_next_trim), 0, 1)
+         ) |> 
+  filter(noninf == 1)
+
+recheck_data <- fxn_recheck_data(lame_cull_noninf,
+                                 disease = rechecked,
+                                 censor_days = days_to_censor_trim,
+                                 years = "2025")
+
+# recheck_graph
+
+  km_label <- c("First Lesion",
+        "History Lesion"
+      )
+
+x_label <- "Days to Recheck"
+y_label <- "% of Cows without a Recheck"
+
+force_order <- c("No Lesion", "First Lesion", "Chronic Lesion")
+life_colours <- c('First Lesion' = "#440154ff" ,
+                  'Chronic Lesion' = "#21908cff"
+                  )
+
+plot <- recheck_data |> 
+  mutate(chronicity = case_when(life_x_disease_cat == "Once" ~ "First Lesion",
+                                life_x_disease_cat != "Once" ~ "Chronic Lesion",
+                                .default = NA_character_)) |> 
+  fxn_km_graph(censor_time = days_to_censor_trim,
+               censor_event = rechecked,
+               facet_col = year)
+plot  
+  
+
+
+
+```
 
 ## Other graphing options
 
